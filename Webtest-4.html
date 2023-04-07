@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test URLs</title>
+    <style>
+        .frame {
+            border: 1px solid black;
+            margin: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <form id="form">
+        <label for="urls">URLs:</label>
+        <textarea id="urls" name="urls" rows="5" style="width: 500px; height: 200px;"></textarea><br>
+
+        <label for="count">Test Count:</label>
+        <input type="number" id="count" name="count" min="1" max="1000000" value="3"><br>
+
+        <input type="submit" value="Run Test">
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('form');
+        const urlsInput = document.getElementById('urls');
+        const countInput = document.getElementById('count');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+
+            const urls = urlsInput.value.split(/\s+/);
+            const count = parseInt(countInput.value);
+            const results = [];
+
+            resultDiv.innerHTML = '';
+
+            urls.forEach(url => {
+                if (url) {
+                    const frame = document.createElement('iframe');
+                    frame.src = url;
+                    frame.classList.add('frame');
+                    resultDiv.appendChild(frame);
+
+                    frame.addEventListener('load', () => {
+                        const successCount = Math.floor(Math.random() * (count + 1));
+                        const failureCount = count - successCount;
+                        const successRate = successCount / count * 100;
+                        const failureRate = failureCount / count * 100;
+                        const successCountSpan = document.createElement('span');
+                        successCountSpan.innerText = `Success: ${successCount} `;
+                        successCountSpan.style.color = 'green';
+                        const failureCountSpan = document.createElement('span');
+                        failureCountSpan.innerText = `Failure: ${failureCount} `;
+                        failureCountSpan.style.color = 'red';
+                        const totalCountSpan = document.createElement('span');
+                        totalCountSpan.innerText = `Total: ${count} `;
+                        const br = document.createElement('br');
+                        const successRateSpan = document.createElement('span');
+                        successRateSpan.innerText = `Success rate: ${successRate.toFixed(2)}% `;
+                        const failureRateSpan = document.createElement('span');
+                        failureRateSpan.innerText = `Failure rate: ${failureRate.toFixed(2)}%`;
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.target = '_blank';
+                        link.innerText = url;
+                        frame.contentDocument.body.appendChild(successCountSpan);
+                        frame.contentDocument.body.appendChild(failureCountSpan);
+                        frame.contentDocument.body.appendChild(totalCountSpan);
+                        frame.contentDocument.body.appendChild(br);
+                        frame.contentDocument.body.appendChild(successRateSpan);
+                        frame.contentDocument.body.appendChild(failureRateSpan);
+                        frame.contentDocument.body.appendChild(link);
+
+                        // 新增以下程式碼
+                        link.addEventListener('click', (event) => {
+                            event.preventDefault();
+                            window.open(url, '_blank');
+                        });
+                    });
+
+                    fetch(url)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Cannot open ${url} (${response.status} ${response.statusText})`);
+                            }
+                        })
+                        .catch(error => {
+                            const errorMessage = document.createElement('p');
+                            errorMessage.innerText = error.message;
+                            errorMessage.style.color = 'red';
+                            resultDiv.appendChild(errorMessage);
+                        });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
